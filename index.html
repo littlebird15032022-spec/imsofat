@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.1">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.3px Courier; -webkit-text-stroke: #000000}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.3px Courier; -webkit-text-stroke: #000000; min-height: 16.0px}
+    span.s1 {font-kerning: none}
+  </style>
+</head>
+<body>
+<p class="p1"><span class="s1">&lt;!DOCTYPE html&gt;</span></p>
+<p class="p1"><span class="s1">&lt;html lang="en"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;head&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;title&gt;VFAT Sickle Reader&lt;/title&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js" type="text/javascript"&gt;&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;style&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>body { font-family: Arial, sans-serif; margin: 20px; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>button { padding: 10px; margin: 5px; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>#output { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
+<p class="p1"><span class="s1">&lt;body&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;h1&gt;VFAT Sickle Data Reader (Ethereum Example)&lt;/h1&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;button id="connectBtn"&gt;Connect Wallet&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;button id="readBtn" disabled&gt;Read Sickle Data&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div id="output"&gt;&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;script&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const FACTORY_ADDRESS = '0x9D70B9E5ac2862C405D64A0193b4A4757Aab7F95'; // SickleFactory on Ethereum</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const USDC_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'; // Sample ERC20: USDC</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>let provider, signer, userAddress;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// ABI snippets (minimal for reads)</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const FACTORY_ABI = [</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>'function sickles(address admin) external view returns (address sickle)'</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const ERC20_ABI = [</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>'function balanceOf(address account) external view returns (uint256)'</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>];</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>document.getElementById('connectBtn').addEventListener('click', async () =&gt; {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (typeof window.ethereum !== 'undefined') {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>provider = new ethers.providers.Web3Provider(window.ethereum);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>await provider.send('eth_requestAccounts', []);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>signer = provider.getSigner();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>userAddress = await signer.getAddress();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>document.getElementById('connectBtn').textContent = `Connected: ${userAddress.slice(0, 6)}...`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>document.getElementById('connectBtn').disabled = true;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>document.getElementById('readBtn').disabled = false;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>} else {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>alert('Install MetaMask!');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>});</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>document.getElementById('readBtn').addEventListener('click', async () =&gt; {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>try {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const output = document.getElementById('output');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>output.innerHTML = '&lt;p&gt;Loading...&lt;/p&gt;';</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>// Get Sickle address from Factory</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const factory = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, provider);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const sickleAddress = await factory.sickles(userAddress);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>if (sickleAddress === ethers.constants.AddressZero) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>output.innerHTML = '&lt;p&gt;No Sickle deployed yet. Make a deposit on VFAT to deploy one.&lt;/p&gt;';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>return;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>// Query ETH balance (native deposit proxy)</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const ethBalance = await provider.getBalance(sickleAddress);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const ethFormatted = ethers.utils.formatEther(ethBalance);</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>// Query USDC balance (sample ERC20 deposit)</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const usdc = new ethers.Contract(USDC_ADDRESS, ERC20_ABI, provider);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const usdcBalance = await usdc.balanceOf(sickleAddress);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const usdcFormatted = ethers.utils.formatUnits(usdcBalance, 6); // USDC: 6 decimals</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>// Total deposits (simple sum; extend for more tokens)</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const totalDeposits = parseFloat(ethFormatted) + parseFloat(usdcFormatted);</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>output.innerHTML = `</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;p&gt;&lt;strong&gt;Sickle Address:&lt;/strong&gt; ${sickleAddress}&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;p&gt;&lt;strong&gt;ETH Balance (Deposits):&lt;/strong&gt; ${ethFormatted} ETH&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;p&gt;&lt;strong&gt;USDC Balance (Deposits):&lt;/strong&gt; ${usdcFormatted} USDC&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;p&gt;&lt;strong&gt;Total Deposits (ETH + USDC):&lt;/strong&gt; ${totalDeposits.toFixed(4)}&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;p&gt;&lt;em&gt;Extend: Add more ERC20 queries or use MulticallContract for batching.&lt;/em&gt;&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>} catch (error) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>document.getElementById('output').innerHTML = `&lt;p&gt;Error: ${error.message}&lt;/p&gt;`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>});</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+</body>
+</html>
